@@ -7,6 +7,7 @@
     <p class="page-kicker">Campaign locked</p>
     <h1 id="locked-title">{{ campaign.name }} can no longer be edited</h1>
     <p>Only draft campaigns are editable. This campaign is currently {{ campaign.get_status_display|lower }}.</p>
+    <p class="campaign-enrollment-count"><strong>{{ campaign.enrollment_count|default:0 }}</strong> shopper{{ campaign.enrollment_count|default:0|pluralize }} enrolled</p>
     {% if request.GET.transitioned %}
       <div class="feedback-banner feedback-banner--success" role="status">Campaign status updated successfully.</div>
     {% endif %}

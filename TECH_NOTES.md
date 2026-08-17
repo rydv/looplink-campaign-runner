@@ -105,12 +105,43 @@ parameter validation, lifecycle/readiness rules, identity normalization, and
 safe offer formatting. Internal and public presenters are intentionally
 separate. The public presenter exposes offers only for `live` campaigns.
 
-## To complete during implementation
+## Exercise flows
 
-- [ ] Example commands and requests for required flows
-- [ ] Final list of timebox cuts and known limitations
-- [ ] Whether and how AI tools were used
-- [ ] What would be implemented next with more time
+Start the stack with `docker compose up -d`, `uv sync`, `npm ci`, migrations,
+and `npm run build`; exact commands are in `README.md`. Create a draft at
+`/campaigns/new/`. To demonstrate a blocked action, try launch before adding
+both a valid UTC window and an offer. To demonstrate a non-live scan, open the
+opaque UUID route for a draft, scheduled, or ended campaign; it resolves but
+does not disclose offers. The README walkthrough covers launch, distribution,
+first/repeat enrollment, ending, and an unknown link.
+
+## Timebox cuts and known limitations
+
+- No authentication, tenancy, scheduler, automatic end, offer execution,
+  coupon generation, OTP, or ownership verification—each is outside scope.
+- No pagination, filters, analytics, enrollment counts, or activity feed.
+- Currency is intentionally plain numeric input, as specified.
+- The copy action uses the browser clipboard API; the URL remains visible for
+  manual copy when it is unavailable.
+
+## AI use
+
+AI assistance was used for planning, code drafting, test creation, and review.
+The resulting code, trade-offs, and tests were inspected and can be explained
+or changed directly.
+
+## What I would do next
+
+Introduce authentication/workspaces before additional team-facing controls. A production system
+would also add audit events, background scheduling, security headers, stronger
+identity verification when required, and browser accessibility regression tests.
+
+## Optional enrollment count
+
+The single selected stretch goal is an internal enrollment count. It is computed
+with a database annotation on the campaign list and detail query, shows only an
+aggregate, and is therefore current on the next internal read after a first or
+recognized repeat enrollment without exposing shopper identities.
 
 ## Stage 3 internal draft builder
 

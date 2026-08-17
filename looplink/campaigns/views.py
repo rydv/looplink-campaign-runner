@@ -1,6 +1,7 @@
 import uuid
 
 from django.core.exceptions import ValidationError
+from django.db.models import Count
 from django.http import HttpResponseNotAllowed
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -26,7 +27,7 @@ def campaign_list(request):
     return render(
         request,
         "campaigns/internal/campaign_list.html",
-        {"campaigns": Campaign.objects.prefetch_related("offers").all()},
+        {"campaigns": Campaign.objects.prefetch_related("offers").annotate(enrollment_count=Count("enrollments"))},
     )
 
 
@@ -54,7 +55,7 @@ def create_campaign(request):
 
 
 def edit_campaign(request, campaign_id):
-    campaign = get_object_or_404(Campaign, pk=campaign_id)
+    campaign = get_object_or_404(Campaign.objects.annotate(enrollment_count=Count("enrollments")), pk=campaign_id)
     if campaign.status != Campaign.Status.DRAFT:
         return _locked_campaign_response(request, campaign)
 

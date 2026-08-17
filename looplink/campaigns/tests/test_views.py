@@ -127,6 +127,18 @@ def test_public_campaign_invalid_id_returns_an_intentional_response(client):
 
 
 @pytest.mark.django_db()
+def test_internal_enrollment_count_tracks_first_not_repeat_enrollment(client):
+    campaign = Campaign.objects.create(name="Counted campaign", status=Campaign.Status.LIVE)
+    url = reverse("campaigns:public", args=(campaign.public_id,))
+
+    assert client.get(reverse("campaigns:index")).context["campaigns"][0].enrollment_count == 0
+    client.post(url, {"identity": "person@example.com"})
+    assert client.get(reverse("campaigns:index")).context["campaigns"][0].enrollment_count == 1
+    client.post(url, {"identity": " PERSON@EXAMPLE.COM "})
+    assert client.get(reverse("campaigns:index")).context["campaigns"][0].enrollment_count == 1
+
+
+@pytest.mark.django_db()
 def test_live_campaign_shows_local_distribution_only(client):
     campaign = Campaign.objects.create(name="Shareable", status=Campaign.Status.LIVE)
 

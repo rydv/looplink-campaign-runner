@@ -1,233 +1,67 @@
-# Looplink Starter Project
-[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
+# LoopLink Campaign Builder & Distribution
 
-Django project using front-end libraries:
+A Django implementation of the LoopLink engineering exercise: an internal campaign builder and a mobile-first shopper enrollment experience.
 
-- [HTMX](https://htmx.org/)
-- [Alpine](https://alpinejs.dev/)
-- [Tailwind CSS](https://tailwindcss.com/)
+The behavioral source of truth is [`../docs/problem-statement.md`](../docs/problem-statement.md). Architecture and staged delivery notes are in [`../docs/solution-blueprint.md`](../docs/solution-blueprint.md) and [`../docs/multi-stage-implementation-plan.md`](../docs/multi-stage-implementation-plan.md).
 
----
+## Prerequisites
 
-## Where to Look First
+- Python 3.13
+- [uv](https://docs.astral.sh/uv/)
+- Node.js and npm
+- Docker Desktop (for PostgreSQL and Redis)
 
-If you're new to this project, here are some good starting points:
-
-- **Complete the Dev Environment Setup**
-  - The instructions are in the following section.
-  - Once complete, you can run `python manage.py runserver` and visit [http://localhost:8000](http://localhost:8000)
-
-- **Using Version Control?**
-  - TIP: Make sure you `git init` (or equivalent in mercurial, svn, etc.) and make an initial commit before you add your code to make future commits readable.
-
-- **Default view (landing page)**  
-  - Python view: `looplink/ui/base/views.py` (the `default` view)  
-  - Template: `looplink/ui/base/templates/base/default.html`
-
-- **HTMX example flow**  
-  - Python view: `looplink/ui/base/views.py` (the HTMX example view using `DjangoHtmxActionMixin`)  
-  - Entry point: `js_entry` named `base/htmx_example`  
-  - Templates:
-    - `looplink/ui/base/templates/base/htmx_example.html`
-    - `looplink/ui/base/templates/base/partials/htmx/initial_state.html`
-    - `looplink/ui/base/templates/base/partials/htmx/step_two.html`
-    - `looplink/ui/base/templates/base/partials/htmx/step_three.html`
-
-- **JavaScript and styles**  
-  - JavaScript entry points are referenced via the `js_entry` template tag.  
-  - App/module-specific assets live in an `assets` folder (for example, `looplink/ui/base/assets/`).  
-  - Global styles live in the `styles` folder at the project root (for example, `styles/looplink.css`), which also includes the Tailwind CSS setup.
-
----
-
-## Dev Environment Setup
-
-### Prerequisites
-
-#### Invoke
-
-This project uses [Invoke](https://www.pyinvoke.org/) for dev automation. Once step 1 below is complete, you can view the list of
-available commands with:
+## Setup and run
 
 ```sh
-inv -l
+docker compose up -d
+uv sync
+npm ci
+.venv/bin/python manage.py migrate
+npm run build
+.venv/bin/python manage.py runserver
 ```
 
-New commands and updates can be made in the `tasks.py` file.
+Open [http://127.0.0.1:8000/campaigns/](http://127.0.0.1:8000/campaigns/).
 
-#### UV
+## Use the two surfaces
 
-Python dependency management uses [`uv`](https://docs.astral.sh/uv/).
+### Internal builder
 
-There are [several ways to install `uv`](https://docs.astral.sh/uv/getting-started/installation/). Use whatever method works best for your platform.
+1. Create a campaign at `/campaigns/new/` with a name, UTC start/end window, and one or more typed offers.
+2. Save drafts freely. Schedule or launch requires a valid, non-ended window and at least one offer.
+3. Launch opens enrollment immediately; scheduling first is optional.
+4. A live campaign shows a copyable public URL and locally generated QR code.
+5. End is explicitly confirmed and permanently closes enrollment.
 
-- **Linux**
+### Shopper page
 
-  Ubuntu:
+Open the live campaign URL or scan its QR code. A shopper enters an email or phone number, then sees the configured offer values. Repeating the same normalized identity is recognized without creating another enrollment.
 
-  ```sh
-  sudo snap install astral-uv
-  ```
+## Required acceptance walkthrough
 
-- **Mac**
+1. Try launching a blank draft; observe readiness feedback.
+2. Add a valid window and offer, then launch directly.
+3. Open the generated public URL and enroll with `person@example.com`.
+4. Submit ` PERSON@EXAMPLE.COM ` again; observe the recognized state.
+5. End the campaign and reload the same public URL; it renders ended with no offers.
+6. Open `/campaigns/c/not-a-public-id/` to verify the intentional invalid-link response.
 
-  First install [Homebrew](https://brew.sh/), then use it to install `uv`:
-
-  ```sh
-  brew install uv
-  ```
-
-
-### STEP 1: Install Python dependencies
-
-> Python 3.13 is required.
-
-Create a virtualenv with `uv`:
+## Verification
 
 ```sh
-uv venv
+.venv/bin/pytest
+ruff check .
+.venv/bin/python manage.py check
+.venv/bin/python manage.py makemigrations --check --dry-run
+npm run build
 ```
 
-Activate the environment:
+## Key implementation choices
 
-```sh
-source .venv/bin/activate
-```
+- Status is authoritative; dates are metadata and never change status.
+- Draft saves and lifecycle actions use row locks plus an integer version.
+- Public URLs contain only an opaque UUID; QR generation is local SVG.
+- The database unique constraint is the duplicate-enrollment authority.
 
-Install Python dependencies:
-
-```sh
-uv sync --compile-bytecode
-```
-
-
-### STEP 2: Run the automated initial environment setup
-
-```sh
-inv setup-dev-env
-```
-
-### STEP 3: Have JavaScript and CSS (SCSS) automatically rebuild on changes
-
-```sh
-inv npm -w
-```
-
-> NOTE: Restart this command if you add a new `js_entry` path.
-
-
-### STEP 4: Run the development server
-
-```sh
-./manage.py runserver
-```
-
-
-### STEP 5: View in browser
-
-With everything running, visit:
-
-```text
-http://localhost:8000/
-```
-
-in your browser.
-
----
-
-## Local Development Notes
-
-Make sure you are using the correct virtual environment (see Dev Environment Setup):
-
-```sh
-source .venv/bin/activate
-```
-
-To bring up the Docker containers:
-
-```sh
-inv docker up
-```
-
-To bring down the Docker containers:
-
-```sh
-inv docker down
-```
-
-To rebuild Docker containers:
-
-```sh
-inv docker rebuild
-```
-
-To update requirements:
-
-```sh
-inv requirements
-```
-
-To run the development server (from the terminal):
-
-```sh
-python manage.py runserver
-```
-
-
-## Running Tests
-
-To run tests:
-
-```sh
-pytest
-```
-
-To test a specific app/module:
-
-```sh
-pytest looplink/ui/dashboard/tests/test_something.py
-```
-
-
-## Recommended: Linting
-
-We recommend the following linters. Configs are already provided.
-
-- Python: [Ruff](https://github.com/astral-sh/ruff)
-- JavaScript: [ESLint](https://eslint.org/)
-
-
-## HTML Formatting
-
-High-level:
-
-- Two-space indentation
-- Attribute line breaks
-
-See [this HTML Guide](https://www.commcarehq.org/styleguide/b5/html/) for full details.
-
-
-## CSS Formatting
-
-- Two-space indentation
-
-
-## Dependencies / Requirements
-
-To add a new dependency, run:
-
-```sh
-uv add --dev PACKAGE_NAME
-```
-
-Alternatively, manually add it to `pyproject.toml`. After a manual edit, run:
-
-```sh
-uv lock
-```
-
-Update requirements with:
-
-```sh
-inv requirements
-```
+See [TECH_NOTES.md](TECH_NOTES.md) for trade-offs, limitations, AI use, and the complete decision record.

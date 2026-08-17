@@ -33,6 +33,7 @@
               <th scope="col">Campaign</th>
               <th scope="col">Window (UTC)</th>
               <th scope="col">Offers</th>
+              <th scope="col">Enrolled</th>
               <th scope="col">Status</th>
               <th scope="col"><span class="sr-only">Open campaign</span></th>
             </tr>
@@ -52,6 +53,7 @@
                   {% endif %}
                 </td>
                 <td>{{ campaign.offers.count }}</td>
+                <td>{{ campaign.enrollment_count }}</td>
                 <td><span class="status-badge status-badge--{{ campaign.status }}">{{ campaign.get_status_display }}</span></td>
                 <td><a class="table-action" href="{% url 'campaigns:edit' campaign.pk %}">Open<span aria-hidden="true"> →</span></a></td>
               </tr>
