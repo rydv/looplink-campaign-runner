@@ -4,6 +4,7 @@ from django.core.exceptions import ValidationError
 from django.http import HttpResponseNotAllowed
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils.safestring import mark_safe
 
 from looplink.campaigns.forms import CampaignForm, EnrollmentForm, OfferFormSet
 from looplink.campaigns.models import Campaign
@@ -15,6 +16,7 @@ from looplink.campaigns.services.campaign_writes import (
     create_draft,
     save_draft,
 )
+from looplink.campaigns.services.distribution import campaign_public_url, qr_svg
 from looplink.campaigns.services.enrollments import CampaignUnavailableError, enroll_identity
 from looplink.campaigns.services.lifecycle import allowed_actions, campaign_readiness_errors
 from looplink.campaigns.services.lifecycle_writes import transition_campaign
@@ -186,6 +188,10 @@ def _render_draft_workspace(
 
 
 def _locked_campaign_response(request, campaign, action_error=None):
+    distribution = {}
+    if campaign.status == Campaign.Status.LIVE:
+        public_url = campaign_public_url(request, campaign)
+        distribution = {"public_url": public_url, "qr_svg": mark_safe(qr_svg(public_url))}
     return render(
         request,
         "campaigns/internal/campaign_locked.html",
@@ -193,6 +199,7 @@ def _locked_campaign_response(request, campaign, action_error=None):
             "campaign": campaign,
             "allowed_actions": allowed_actions(campaign.status),
             "action_error": action_error,
+            **distribution,
         },
         status=409,
     )

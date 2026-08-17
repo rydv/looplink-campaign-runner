@@ -141,3 +141,11 @@ time, then relies on the database uniqueness constraint for cross-request
 idempotency. The attempted insert is isolated in a nested transaction so a
 duplicate can be recovered as a recognized enrollment without poisoning the
 outer transaction.
+
+## Stage 6 distribution
+
+The distribution URL is built from the inbound request and contains only the
+campaign's opaque UUID. QR rendering uses the local `qrcode` Python package and
+an inline SVG image; it makes no request to a hosted QR service and persists no
+derived image. The live-only internal view is the sole place distribution data
+is prepared or rendered.

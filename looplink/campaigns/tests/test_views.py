@@ -124,3 +124,15 @@ def test_public_campaign_invalid_id_returns_an_intentional_response(client):
 
     assert response.status_code == 404
     assert "link is not available" in response.content.decode()
+
+
+@pytest.mark.django_db()
+def test_live_campaign_shows_local_distribution_only(client):
+    campaign = Campaign.objects.create(name="Shareable", status=Campaign.Status.LIVE)
+
+    response = client.get(reverse("campaigns:edit", args=(campaign.pk,)))
+
+    content = response.content.decode()
+    assert response.status_code == 409
+    assert f"/campaigns/c/{campaign.public_id}/" in content
+    assert "<svg" in content

@@ -25,6 +25,15 @@
         <button class="button button--danger" type="submit">End campaign</button>
       </form>
     {% endif %}
+    {% if public_url %}
+      <section class="distribution-card" aria-labelledby="distribution-title">
+        <p class="page-kicker">Distribution</p><h2 id="distribution-title">Share this live campaign</h2>
+        <p>Scan the code or open the campaign link on any phone.</p>
+        <div class="distribution-card__qr" role="img" aria-label="QR code for {{ campaign.name }}">{{ qr_svg }}</div>
+        <label for="public-campaign-url">Public campaign link</label>
+        <div class="distribution-card__url"><input id="public-campaign-url" value="{{ public_url }}" readonly><button class="button button--secondary" type="button" data-copy-target="public-campaign-url">Copy link</button></div>
+      </section>
+    {% endif %}
     <a class="button button--secondary" href="{% url 'campaigns:index' %}">Return to campaigns</a>
   </section>
 {% endblock dashboard_content %}

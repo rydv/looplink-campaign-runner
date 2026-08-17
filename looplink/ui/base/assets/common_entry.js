@@ -34,3 +34,11 @@ Alpine.data('offerFormset', () => ({
 }));
 
 Alpine.start();
+
+document.addEventListener('click', async (event) => {
+    const button = event.target.closest('[data-copy-target]');
+    if (!button || !navigator.clipboard) return;
+    const input = document.getElementById(button.dataset.copyTarget);
+    await navigator.clipboard.writeText(input.value);
+    button.textContent = 'Copied';
+});
