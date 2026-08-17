@@ -14,4 +14,23 @@ import 'base/common';
 
 import Alpine from 'alpinejs';
 
+Alpine.data('offerFormset', () => ({
+    addOffer() {
+        const totalForms = document.querySelector('#id_offers-TOTAL_FORMS');
+        const formIndex = Number(totalForms.value);
+        const formMarkup = this.$refs.emptyOffer.innerHTML.replaceAll('__prefix__', formIndex);
+        this.$refs.offerStack.insertAdjacentHTML('beforeend', formMarkup);
+        totalForms.value = formIndex + 1;
+        Alpine.initTree(this.$refs.offerStack.lastElementChild);
+    },
+    removeOffer(button) {
+        const offerCard = button.closest('[data-offer-form]');
+        const deleteInput = offerCard.querySelector('input[name$="-DELETE"]');
+        if (deleteInput) {
+            deleteInput.checked = true;
+        }
+        offerCard.hidden = true;
+    },
+}));
+
 Alpine.start();

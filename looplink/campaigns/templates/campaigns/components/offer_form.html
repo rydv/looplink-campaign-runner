@@ -1,0 +1,29 @@
+<article class="offer-card" data-offer-form>
+  <div class="offer-card__header">
+    <div>
+      <span class="offer-card__eyebrow">Campaign offer</span>
+      <h3>Offer configuration</h3>
+    </div>
+    <button class="remove-offer" type="button" @click="removeOffer($el)" aria-label="Remove this offer">×</button>
+  </div>
+  {{ offer_form.id }}
+  {{ offer_form.position }}
+  {{ offer_form.parameters }}
+  <span class="offer-delete">{{ offer_form.DELETE }}</span>
+  {{ offer_form.non_field_errors }}
+  <div class="offer-fields">
+    <div class="field field--full">
+      <label for="{{ offer_form.type.id_for_label }}">Offer type</label>
+      {{ offer_form.type }}
+      {{ offer_form.type.errors }}
+    </div>
+    <div class="offer-parameter-grid">
+      <div class="field"><label for="{{ offer_form.percent.id_for_label }}">Percent</label>{{ offer_form.percent }}</div>
+      <div class="field"><label for="{{ offer_form.applies_to.id_for_label }}">Applies to</label>{{ offer_form.applies_to }}</div>
+      <div class="field"><label for="{{ offer_form.amount_off.id_for_label }}">Amount off</label>{{ offer_form.amount_off }}</div>
+      <div class="field"><label for="{{ offer_form.min_basket.id_for_label }}">Minimum basket</label>{{ offer_form.min_basket }}</div>
+      <div class="field"><label for="{{ offer_form.stickers.id_for_label }}">Stickers</label>{{ offer_form.stickers }}</div>
+      <div class="field"><label for="{{ offer_form.per_amount.id_for_label }}">Per amount spent</label>{{ offer_form.per_amount }}</div>
+    </div>
+  </div>
+</article>

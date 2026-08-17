@@ -1,0 +1,12 @@
+{% extends "campaigns/internal/layout.html" %}
+
+{% block title %}Campaign locked · LoopLink{% endblock title %}
+
+{% block dashboard_content %}
+  <section class="locked-state" aria-labelledby="locked-title">
+    <p class="page-kicker">Campaign locked</p>
+    <h1 id="locked-title">{{ campaign.name }} can no longer be edited</h1>
+    <p>Only draft campaigns are editable. This campaign is currently {{ campaign.get_status_display|lower }}.</p>
+    <a class="button button--secondary" href="{% url 'campaigns:index' %}">Return to campaigns</a>
+  </section>
+{% endblock dashboard_content %}

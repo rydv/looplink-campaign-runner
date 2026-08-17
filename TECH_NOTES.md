@@ -111,3 +111,13 @@ separate. The public presenter exposes offers only for `live` campaigns.
 - [ ] Final list of timebox cuts and known limitations
 - [ ] Whether and how AI tools were used
 - [ ] What would be implemented next with more time
+
+## Stage 3 internal draft builder
+
+The draft builder is intentionally a server-rendered Django form and inline
+formset first, with Alpine only adding repeatable offer rows in the browser.
+This keeps direct HTTP submissions, validation errors, and persistence behavior
+independent of JavaScript. The write service locks the campaign row, permits
+changes only while it is a draft, checks the submitted integer version, and
+replaces the ordered offer aggregate atomically. A non-draft edit URL renders a
+read-only locked response rather than trusting the client to hide edit controls.

@@ -1,0 +1,114 @@
+{% extends "campaigns/internal/layout.html" %}
+
+{% block title %}{{ page_title }} · LoopLink{% endblock title %}
+
+{% block dashboard_content %}
+  <section class="page-header page-header--form" aria-labelledby="page-title">
+    <div>
+      <a class="back-link" href="{% url 'campaigns:index' %}">← All campaigns</a>
+      <p class="page-kicker">Campaign workspace</p>
+      <h1 id="page-title">{{ page_title }}</h1>
+      <p class="page-subtitle">Drafts are private and remain editable until they are scheduled or launched.</p>
+    </div>
+    <span class="status-badge status-badge--draft">Draft</span>
+  </section>
+
+  {% if request.GET.saved %}
+    <div class="feedback-banner feedback-banner--success" role="status">Draft saved. Lifecycle actions will be available once the campaign is ready.</div>
+  {% endif %}
+
+  <form method="post" class="campaign-editor" x-data="offerFormset()" novalidate>
+    {% csrf_token %}
+    {{ campaign_form.version }}
+    {{ campaign_form.non_field_errors }}
+    {{ offer_formset.management_form }}
+    {{ offer_formset.non_form_errors }}
+
+    <div class="campaign-editor__main">
+      <section class="editor-card" aria-labelledby="basics-title">
+        <div class="editor-card__heading">
+          <div>
+            <p class="section-kicker">01</p>
+            <h2 id="basics-title">Campaign details</h2>
+          </div>
+          <p>Give the team and shoppers a clear campaign identity.</p>
+        </div>
+        <div class="form-grid">
+          <div class="field field--full">
+            <label for="{{ campaign_form.name.id_for_label }}">Campaign name</label>
+            {{ campaign_form.name }}
+            {{ campaign_form.name.errors }}
+          </div>
+          <div class="field field--full">
+            <label for="{{ campaign_form.description.id_for_label }}">Description <span>Optional</span></label>
+            {{ campaign_form.description }}
+            {{ campaign_form.description.errors }}
+          </div>
+        </div>
+      </section>
+
+      <section class="editor-card" aria-labelledby="window-title">
+        <div class="editor-card__heading">
+          <div>
+            <p class="section-kicker">02</p>
+            <h2 id="window-title">Campaign window</h2>
+          </div>
+          <p>Use UTC. Dates describe the run window; they never change status automatically.</p>
+        </div>
+        <div class="form-grid form-grid--two">
+          <div class="field">
+            <label for="{{ campaign_form.starts_at.id_for_label }}">Starts at</label>
+            {{ campaign_form.starts_at }}
+            {{ campaign_form.starts_at.errors }}
+          </div>
+          <div class="field">
+            <label for="{{ campaign_form.ends_at.id_for_label }}">Ends at</label>
+            {{ campaign_form.ends_at }}
+            {{ campaign_form.ends_at.errors }}
+          </div>
+        </div>
+      </section>
+
+      <section class="editor-card" aria-labelledby="offers-title">
+        <div class="editor-card__heading editor-card__heading--offers">
+          <div>
+            <p class="section-kicker">03</p>
+            <h2 id="offers-title">Offers</h2>
+          </div>
+          <p>Add one or more offers when the campaign is ready to schedule or launch.</p>
+        </div>
+
+        <div class="offer-stack" x-ref="offerStack">
+          {% for offer_form in offer_formset %}
+            {% include "campaigns/components/offer_form.html" with offer_form=offer_form %}
+          {% endfor %}
+        </div>
+
+        <template x-ref="emptyOffer">
+          {% include "campaigns/components/offer_form.html" with offer_form=offer_formset.empty_form %}
+        </template>
+        <button class="button button--secondary" type="button" @click="addOffer()">
+          <span aria-hidden="true">+</span> Add another offer
+        </button>
+      </section>
+    </div>
+
+    <aside class="campaign-editor__aside">
+      <section class="editor-summary">
+        <span class="editor-summary__icon" aria-hidden="true">✦</span>
+        <h2>Draft controls</h2>
+        <p>Save changes freely while this campaign remains a draft.</p>
+        <button class="button button--primary button--full" type="submit">{{ submit_label }}</button>
+        <p class="editor-summary__note">Schedule and launch are added in the next workflow stage.</p>
+      </section>
+      <section class="editor-help" aria-labelledby="offer-help-title">
+        <h2 id="offer-help-title">Offer fields</h2>
+        <dl>
+          <div><dt>Product %</dt><dd>Percent and a free-text SKU label.</dd></div>
+          <div><dt>Cart fixed</dt><dd>Amount off and minimum basket.</dd></div>
+          <div><dt>Sticker earn</dt><dd>Stickers and spend threshold.</dd></div>
+        </dl>
+      </section>
+    </aside>
+  </form>
+{% endblock dashboard_content %}
