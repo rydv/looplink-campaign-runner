@@ -94,3 +94,13 @@ class OfferForm(forms.ModelForm):
 
 
 OfferFormSet = inlineformset_factory(Campaign, Offer, form=OfferForm, extra=1, can_delete=True)
+
+
+class EnrollmentForm(forms.Form):
+    identity = forms.CharField(
+        label="Email or phone number",
+        max_length=254,
+        widget=forms.TextInput(
+            attrs={"autocomplete": "email", "placeholder": "you@example.com or +1 555 123 4567"}
+        ),
+    )

@@ -1,0 +1,3 @@
+{% extends "campaigns/public/base.html" %}
+{% block title %}Campaign unavailable · LoopLink{% endblock title %}
+{% block content %}<main class="shopper-shell"><section class="shopper-card"><p class="shopper-eyebrow">LoopLink campaigns</p>{% if campaign.status == "draft" %}<h1>This campaign is still being prepared</h1><p>Please check back when it is live.</p>{% elif campaign.status == "scheduled" %}<h1>This campaign has not started yet</h1><p>Please return when the campaign goes live.</p>{% else %}<h1>This campaign has ended</h1><p>Thanks for your interest. This campaign is no longer accepting enrollments.</p>{% endif %}</section></main>{% endblock content %}

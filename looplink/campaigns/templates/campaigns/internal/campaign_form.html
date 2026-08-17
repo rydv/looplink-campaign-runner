@@ -14,7 +14,10 @@
   </section>
 
   {% if request.GET.saved %}
-    <div class="feedback-banner feedback-banner--success" role="status">Draft saved. Lifecycle actions will be available once the campaign is ready.</div>
+    <div class="feedback-banner feedback-banner--success" role="status">Draft saved. You can schedule or launch it when it is ready.</div>
+  {% endif %}
+  {% if action_error %}
+    <div class="feedback-banner feedback-banner--error" role="alert">{{ action_error }}</div>
   {% endif %}
 
   <form method="post" class="campaign-editor" x-data="offerFormset()" novalidate>
@@ -99,7 +102,22 @@
         <h2>Draft controls</h2>
         <p>Save changes freely while this campaign remains a draft.</p>
         <button class="button button--primary button--full" type="submit">{{ submit_label }}</button>
-        <p class="editor-summary__note">Schedule and launch are added in the next workflow stage.</p>
+        {% if campaign %}
+          <div class="lifecycle-controls" aria-label="Campaign lifecycle actions">
+            <p class="editor-summary__note">Lifecycle actions lock this campaign against further edits.</p>
+            {% if readiness_errors %}
+              <ul class="readiness-list">
+                {% for field, error in readiness_errors.items %}<li>{{ error }}</li>{% endfor %}
+              </ul>
+            {% endif %}
+            {% if "schedule" in allowed_actions %}
+              <button class="button button--secondary button--full" type="submit" form="schedule-campaign">Schedule campaign</button>
+            {% endif %}
+            {% if "launch" in allowed_actions %}
+              <button class="button button--launch button--full" type="submit" form="launch-campaign">Launch now</button>
+            {% endif %}
+          </div>
+        {% endif %}
       </section>
       <section class="editor-help" aria-labelledby="offer-help-title">
         <h2 id="offer-help-title">Offer fields</h2>
@@ -111,4 +129,13 @@
       </section>
     </aside>
   </form>
+
+  {% if campaign %}
+    {% if "schedule" in allowed_actions %}
+      <form id="schedule-campaign" method="post" action="{% url 'campaigns:action' campaign.pk 'schedule' %}">{% csrf_token %}<input type="hidden" name="version" value="{{ campaign.version }}"></form>
+    {% endif %}
+    {% if "launch" in allowed_actions %}
+      <form id="launch-campaign" method="post" action="{% url 'campaigns:action' campaign.pk 'launch' %}">{% csrf_token %}<input type="hidden" name="version" value="{{ campaign.version }}"></form>
+    {% endif %}
+  {% endif %}
 {% endblock dashboard_content %}

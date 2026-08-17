@@ -7,6 +7,24 @@
     <p class="page-kicker">Campaign locked</p>
     <h1 id="locked-title">{{ campaign.name }} can no longer be edited</h1>
     <p>Only draft campaigns are editable. This campaign is currently {{ campaign.get_status_display|lower }}.</p>
+    {% if request.GET.transitioned %}
+      <div class="feedback-banner feedback-banner--success" role="status">Campaign status updated successfully.</div>
+    {% endif %}
+    {% if action_error %}
+      <div class="feedback-banner feedback-banner--error" role="alert">{{ action_error }}</div>
+    {% endif %}
+    {% if "launch" in allowed_actions %}
+      <form method="post" action="{% url 'campaigns:action' campaign.pk 'launch' %}">
+        {% csrf_token %}<input type="hidden" name="version" value="{{ campaign.version }}">
+        <button class="button button--launch" type="submit">Launch now</button>
+      </form>
+    {% endif %}
+    {% if "end" in allowed_actions %}
+      <form method="post" action="{% url 'campaigns:action' campaign.pk 'end' %}">
+        {% csrf_token %}<input type="hidden" name="version" value="{{ campaign.version }}">
+        <button class="button button--danger" type="submit">End campaign</button>
+      </form>
+    {% endif %}
     <a class="button button--secondary" href="{% url 'campaigns:index' %}">Return to campaigns</a>
   </section>
 {% endblock dashboard_content %}

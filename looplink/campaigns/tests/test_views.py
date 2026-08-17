@@ -66,3 +66,61 @@ def test_non_draft_campaign_cannot_be_edited_by_a_direct_request(client):
 
     assert response.status_code == 409
     assert "can no longer be edited" in response.content.decode()
+
+
+@pytest.mark.django_db()
+def test_launch_action_transitions_a_ready_draft(client):
+    campaign = Campaign.objects.create(
+        name="Action campaign",
+        starts_at="2026-08-20T10:00Z",
+        ends_at="2026-08-22T10:00Z",
+    )
+    Offer.objects.create(
+        campaign=campaign,
+        type=Offer.Type.CART_FIXED_DISCOUNT,
+        parameters={"amount_off": 5, "min_basket": 25},
+    )
+
+    response = client.post(
+        reverse("campaigns:action", args=(campaign.pk, "launch")),
+        {"version": campaign.version},
+    )
+
+    campaign.refresh_from_db()
+    assert response.status_code == 302
+    assert campaign.status == Campaign.Status.LIVE
+    assert campaign.version == 2
+
+
+@pytest.mark.django_db()
+def test_public_campaign_hides_non_live_offers_and_enrolls_once(client):
+    campaign = Campaign.objects.create(name="Public campaign")
+    Offer.objects.create(
+        campaign=campaign,
+        type=Offer.Type.CART_FIXED_DISCOUNT,
+        parameters={"amount_off": 5, "min_basket": 25},
+    )
+    url = reverse("campaigns:public", args=(campaign.public_id,))
+
+    response = client.get(url)
+    assert response.status_code == 200
+    assert "still being prepared" in response.content.decode()
+    assert "baskets" not in response.content.decode()
+
+    campaign.status = Campaign.Status.LIVE
+    campaign.save(update_fields=("status",))
+    response = client.post(url, {"identity": " PERSON@EXAMPLE.COM "})
+    assert "You’re in" in response.content.decode()
+    assert campaign.enrollments.count() == 1
+
+    response = client.post(url, {"identity": "person@example.com"})
+    assert "Welcome back" in response.content.decode()
+    assert campaign.enrollments.count() == 1
+
+
+@pytest.mark.django_db()
+def test_public_campaign_invalid_id_returns_an_intentional_response(client):
+    response = client.get("/campaigns/c/not-a-public-id/")
+
+    assert response.status_code == 404
+    assert "link is not available" in response.content.decode()

@@ -121,3 +121,23 @@ independent of JavaScript. The write service locks the campaign row, permits
 changes only while it is a draft, checks the submitted integer version, and
 replaces the ordered offer aggregate atomically. A non-draft edit URL renders a
 read-only locked response rather than trusting the client to hide edit controls.
+
+## Stage 4 lifecycle actions
+
+Lifecycle changes go through a separate `transition_campaign` command instead
+of the draft write path. It acquires the campaign row lock, verifies the
+submitted version and allowed action against current state, re-validates
+readiness for schedule/launch, then increments the version with the new status
+in the same transaction. The route accepts only POST and the UI only renders
+actions returned by the lifecycle policy; those UI controls are guidance, not
+the security boundary.
+
+## Stage 5 shopper access and enrollment
+
+Public campaigns are addressed by the opaque UUID alone and are presented by a
+separate, deliberately small data shape. Non-live pages disclose neither offers
+nor operational details. Enrollment locks and re-checks campaign status at POST
+time, then relies on the database uniqueness constraint for cross-request
+idempotency. The attempted insert is isolated in a nested transaction so a
+duplicate can be recovered as a recognized enrollment without poisoning the
+outer transaction.
