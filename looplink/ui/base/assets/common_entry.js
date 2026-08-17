@@ -31,6 +31,17 @@ Alpine.data('offerFormset', () => ({
         }
         offerCard.hidden = true;
     },
+    syncOfferFields(element) {
+        const offerCard = element.closest('[data-offer-form]') || element;
+        const offerType = offerCard.querySelector('[data-offer-type]').value;
+        offerCard.querySelectorAll('[data-offer-parameters]').forEach((group) => {
+            const isSelected = group.dataset.offerParameters === offerType;
+            group.hidden = !isSelected;
+            group.querySelectorAll('input, select, textarea').forEach((field) => {
+                field.disabled = !isSelected;
+            });
+        });
+    },
 }));
 
 Alpine.start();

@@ -69,6 +69,16 @@ def test_non_draft_campaign_cannot_be_edited_by_a_direct_request(client):
 
 
 @pytest.mark.django_db()
+def test_scheduled_campaign_open_view_offers_the_launch_action(client):
+    campaign = Campaign.objects.create(name="Scheduled campaign", status=Campaign.Status.SCHEDULED)
+
+    response = client.get(reverse("campaigns:edit", args=(campaign.pk,)))
+
+    assert response.status_code == 409
+    assert "Launch campaign" in response.content.decode()
+
+
+@pytest.mark.django_db()
 def test_launch_action_transitions_a_ready_draft(client):
     campaign = Campaign.objects.create(
         name="Action campaign",

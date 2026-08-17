@@ -15,10 +15,14 @@
       <div class="feedback-banner feedback-banner--error" role="alert">{{ action_error }}</div>
     {% endif %}
     {% if "launch" in allowed_actions %}
-      <form method="post" action="{% url 'campaigns:action' campaign.pk 'launch' %}">
-        {% csrf_token %}<input type="hidden" name="version" value="{{ campaign.version }}">
-        <button class="button button--launch" type="submit">Launch now</button>
-      </form>
+      <section class="next-action-card" aria-labelledby="launch-title">
+        <p class="page-kicker">Next action</p><h2 id="launch-title">Ready to open enrollment?</h2>
+        <p>Launching makes this campaign immediately available to shoppers.</p>
+        <form method="post" action="{% url 'campaigns:action' campaign.pk 'launch' %}">
+          {% csrf_token %}<input type="hidden" name="version" value="{{ campaign.version }}">
+          <button class="button button--launch" type="submit">Launch campaign</button>
+        </form>
+      </section>
     {% endif %}
     {% if "end" in allowed_actions %}
       <button class="button button--danger" type="button" data-open-dialog="end-campaign-dialog">End campaign</button>

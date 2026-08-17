@@ -46,6 +46,9 @@ class OfferForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields["type"].widget.attrs.update(
+            {"data-offer-type": "true", "x-on:change": "syncOfferFields($el)"}
+        )
         parameters = self.instance.parameters or {}
         for field_name in ("percent", "applies_to", "amount_off", "min_basket", "stickers", "per_amount"):
             self.fields[field_name].initial = parameters.get(field_name)

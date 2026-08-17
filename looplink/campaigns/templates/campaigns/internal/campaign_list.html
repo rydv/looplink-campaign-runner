@@ -47,7 +47,10 @@
                 </td>
                 <td>
                   {% if campaign.starts_at and campaign.ends_at %}
-                    <span class="campaign-window">{{ campaign.starts_at|date:"M j, Y · H:i" }}<br>{{ campaign.ends_at|date:"M j, Y · H:i" }}</span>
+                    <div class="campaign-window" aria-label="Campaign window in UTC">
+                      <div><span>Start</span><time datetime="{{ campaign.starts_at|date:'c' }}">{{ campaign.starts_at|date:"M j, Y" }} <b>{{ campaign.starts_at|date:"H:i" }}</b></time></div>
+                      <div><span>End</span><time datetime="{{ campaign.ends_at|date:'c' }}">{{ campaign.ends_at|date:"M j, Y" }} <b>{{ campaign.ends_at|date:"H:i" }}</b></time></div>
+                    </div>
                   {% else %}
                     <span class="campaign-window campaign-window--empty">Not set</span>
                   {% endif %}
