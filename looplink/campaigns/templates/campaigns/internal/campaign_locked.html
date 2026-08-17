@@ -20,10 +20,17 @@
       </form>
     {% endif %}
     {% if "end" in allowed_actions %}
-      <form method="post" action="{% url 'campaigns:action' campaign.pk 'end' %}">
-        {% csrf_token %}<input type="hidden" name="version" value="{{ campaign.version }}">
-        <button class="button button--danger" type="submit">End campaign</button>
-      </form>
+      <button class="button button--danger" type="button" data-open-dialog="end-campaign-dialog">End campaign</button>
+      <dialog class="confirmation-dialog" id="end-campaign-dialog" aria-labelledby="end-campaign-title">
+        <form method="dialog"><button class="dialog-close" aria-label="Close confirmation">×</button></form>
+        <p class="page-kicker">Confirm action</p><h2 id="end-campaign-title">End this campaign?</h2>
+        <p>Shoppers will no longer be able to enroll, and this action cannot be reversed.</p>
+        <form method="post" action="{% url 'campaigns:action' campaign.pk 'end' %}" class="dialog-actions">
+          {% csrf_token %}<input type="hidden" name="version" value="{{ campaign.version }}">
+          <button class="button button--secondary" type="button" data-close-dialog>Cancel</button>
+          <button class="button button--danger" type="submit">End campaign</button>
+        </form>
+      </dialog>
     {% endif %}
     {% if public_url %}
       <section class="distribution-card" aria-labelledby="distribution-title">

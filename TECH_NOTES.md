@@ -149,3 +149,13 @@ campaign's opaque UUID. QR rendering uses the local `qrcode` Python package and
 an inline SVG image; it makes no request to a hosted QR service and persists no
 derived image. The live-only internal view is the sole place distribution data
 is prepared or rendered.
+
+## Stage 7 interaction and accessibility polish
+
+The terminal end transition requires an explicit native dialog confirmation,
+which retains browser keyboard and focus behavior without a custom modal
+dependency. Shared frontend behavior prevents repeated submit clicks, returns
+focus to an invalid control after a server-rendered validation response, and
+keeps the copy-link and distribution controls usable in narrow layouts. These
+are interface safeguards only; lifecycle and validation checks remain enforced
+on the server.

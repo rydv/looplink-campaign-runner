@@ -42,3 +42,25 @@ document.addEventListener('click', async (event) => {
     await navigator.clipboard.writeText(input.value);
     button.textContent = 'Copied';
 });
+
+document.addEventListener('click', (event) => {
+    const opener = event.target.closest('[data-open-dialog]');
+    if (opener) document.getElementById(opener.dataset.openDialog).showModal();
+    if (event.target.closest('[data-close-dialog]')) event.target.closest('dialog').close();
+});
+
+document.addEventListener('submit', (event) => {
+    const form = event.target;
+    if (form.dataset.submitting) return;
+    form.dataset.submitting = 'true';
+    form.querySelectorAll('button[type="submit"]').forEach((button) => {
+        button.disabled = true;
+        button.dataset.originalLabel = button.textContent;
+        button.textContent = 'Working…';
+    });
+});
+
+window.addEventListener('DOMContentLoaded', () => {
+    const invalid = document.querySelector('[aria-invalid="true"], .errorlist ~ input, .errorlist ~ select, .errorlist ~ textarea');
+    if (invalid) invalid.focus();
+});

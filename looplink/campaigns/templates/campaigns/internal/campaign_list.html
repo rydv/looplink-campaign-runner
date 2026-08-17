@@ -23,7 +23,7 @@
         <h2 id="campaign-list-title">All campaigns</h2>
         <p>Campaigns you create will appear here with their current lifecycle status.</p>
       </div>
-      <span class="record-count">0 campaigns</span>
+      <span class="record-count">{{ campaigns|length }} campaign{{ campaigns|length|pluralize }}</span>
     </div>
     {% if campaigns %}
       <div class="campaign-table-wrap">
@@ -42,7 +42,7 @@
               <tr>
                 <td>
                   <a class="campaign-name" href="{% url 'campaigns:edit' campaign.pk %}">{{ campaign.name }}</a>
-                  {% if campaign.description %}<p>{{ campaign.description|truncatechars:76 }}</p>{% endif %}
+                  {% if campaign.description %}<p title="{{ campaign.description }}">{{ campaign.description|truncatechars:76 }}</p>{% endif %}
                 </td>
                 <td>
                   {% if campaign.starts_at and campaign.ends_at %}
