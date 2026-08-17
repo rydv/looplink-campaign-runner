@@ -90,6 +90,21 @@ and shadows, so an official palette can replace them in one place.
   automatic audit fix was applied because it could introduce unrelated or
   breaking dependency changes; this will be reassessed before submission.
 
+## Stage 2 domain foundation
+
+`Campaign` keeps its internal database identifier separate from an opaque UUID
+`public_id`, and includes status, UTC window fields, version, and timestamps.
+Drafts may have an incomplete window while they are being built; readiness is
+checked only at schedule/launch time. `Offer` is an ordered list—not a map by
+type—with JSON parameters validated by the fixed offer catalog. `Enrollment`
+stores both original and normalized identity, with a database unique constraint
+on `(campaign, normalized_identity)`.
+
+The model layer provides persistence constraints; pure services own offer
+parameter validation, lifecycle/readiness rules, identity normalization, and
+safe offer formatting. Internal and public presenters are intentionally
+separate. The public presenter exposes offers only for `live` campaigns.
+
 ## To complete during implementation
 
 - [ ] Example commands and requests for required flows
