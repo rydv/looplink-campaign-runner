@@ -33,6 +33,7 @@ THIRD_PARTY_APPS = [
 ]
 PROJECT_APPS = [
     "looplink.django_ext",
+    "looplink.campaigns",
 ]
 UI_APPS = [
     "looplink.ui.base",

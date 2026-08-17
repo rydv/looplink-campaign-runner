@@ -5,6 +5,7 @@ from looplink.django_ext.templatetags.common_tags import static
 
 urlpatterns = [
     path("favicon.ico", RedirectView.as_view(url=static("base/images/favicon.png"), permanent=True)),
+    path("campaigns/", include("looplink.campaigns.urls")),
     path("", include("looplink.ui.base.urls")),
     path("robots.txt", TemplateView.as_view(template_name="robots.txt", content_type="text/plain")),
 ]
