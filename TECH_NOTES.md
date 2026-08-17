@@ -68,6 +68,15 @@ the fallback without rewriting templates.
 The starter's Outfit typeface, Django templates, HTMX actions, Alpine for local
 interactions, and Tailwind styling will be retained.
 
+### Provisional UI tokens
+
+The first implementation uses a deep ink navigation surface (`#101323`), an
+indigo primary (`#5d4ce6`), a teal operational accent (`#14b8a6`), and neutral
+white/slate content surfaces. These are intentionally modern commerce-platform
+defaults rather than claimed LoopLink brand values. They live in
+`styles/looplink.css` as `--ll-*` tokens, together with shared radii, borders,
+and shadows, so an official palette can replace them in one place.
+
 ## Environment baseline
 
 - The repository began from commit `062fc69` (`template code`).

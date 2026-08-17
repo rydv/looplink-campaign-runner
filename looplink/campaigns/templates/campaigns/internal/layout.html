@@ -1,0 +1,18 @@
+{% extends "base/layout.html" %}
+{% load common_tags %}
+
+{% js_entry "base/common_entry" %}
+
+{% block body_attrs %} class="looplink-app"{% endblock body_attrs %}
+
+{% block content %}
+  <div class="dashboard-shell">
+    {% include "campaigns/components/sidebar.html" %}
+    <main class="dashboard-main" id="main-content">
+      {% include "campaigns/components/topbar.html" %}
+      <div class="dashboard-content">
+        {% block dashboard_content %}{% endblock dashboard_content %}
+      </div>
+    </main>
+  </div>
+{% endblock content %}

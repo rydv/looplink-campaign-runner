@@ -1,0 +1,30 @@
+<aside class="dashboard-sidebar" aria-label="Primary navigation">
+  <a class="brand-lockup" href="{% url 'campaigns:index' %}" aria-label="LoopLink campaigns home">
+    <span class="brand-mark" aria-hidden="true">
+      <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M9.5 11.5a6.5 6.5 0 0 1 11.09-4.6l1.41 1.4-2.83 2.83-1.41-1.42a2.5 2.5 0 1 0-3.53 3.54l1.41 1.4-2.83 2.83-1.4-1.41a6.48 6.48 0 0 1-1.91-4.6Z" fill="currentColor"/>
+        <path d="M22.5 20.5a6.5 6.5 0 0 1-11.09 4.6L10 23.7l2.83-2.83 1.41 1.42a2.5 2.5 0 1 0 3.53-3.54l-1.41-1.4 2.83-2.83 1.4 1.41a6.48 6.48 0 0 1 1.91 4.6Z" fill="currentColor" opacity=".68"/>
+      </svg>
+    </span>
+    <span>LoopLink</span>
+  </a>
+
+  <nav class="dashboard-nav">
+    <a class="dashboard-nav-link dashboard-nav-link--active" href="{% url 'campaigns:index' %}" aria-current="page">
+      <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>
+      </svg>
+      <span>Campaigns</span>
+    </a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="workspace-chip">
+      <span class="workspace-chip__avatar" aria-hidden="true">LL</span>
+      <span>
+        <strong>LoopLink</strong>
+        <small>Campaign workspace</small>
+      </span>
+    </div>
+  </div>
+</aside>

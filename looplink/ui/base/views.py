@@ -1,18 +1,11 @@
-from django.shortcuts import render
-from django.urls import reverse
+from django.shortcuts import redirect
 from django.views.generic import TemplateView
 
 from looplink.django_ext.htmx import DjangoHtmxActionMixin, dj_hx_action
 
 
 def default(request):
-    return render(
-        request,
-        "base/default.html",
-        {
-            "htmx_example_url": reverse(HtmxExampleView.urlname),
-        },
-    )
+    return redirect("campaigns:index")
 
 
 class HtmxExampleView(DjangoHtmxActionMixin, TemplateView):
