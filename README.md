@@ -2,7 +2,7 @@
 
 A Django implementation of the LoopLink engineering exercise: an internal campaign builder and a mobile-first shopper enrollment experience.
 
-The behavioral source of truth is [`../docs/problem-statement.md`](../docs/problem-statement.md). Architecture and staged delivery notes are in [`../docs/solution-blueprint.md`](../docs/solution-blueprint.md) and [`../docs/multi-stage-implementation-plan.md`](../docs/multi-stage-implementation-plan.md).
+The behavioral source of truth is [`./docs/problem-statement.md`](./docs/problem-statement.md). Architecture and staged delivery notes are in [`./docs/solution-blueprint.md`](./docs/solution-blueprint.md) and [`./docs/multi-stage-implementation-plan.md`](./docs/multi-stage-implementation-plan.md).
 
 ## Prerequisites
 
