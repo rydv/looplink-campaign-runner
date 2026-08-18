@@ -1,4 +1,25 @@
 services:
+  web:
+    build:
+      context: .
+    environment:
+      SECRET_KEY: development-only-change-before-production
+      DEBUG: "True"
+      ALLOWED_HOSTS: localhost,127.0.0.1
+      DJANGO_DATABASE_NAME: interview
+      DJANGO_DATABASE_USER: postgres
+      DJANGO_DATABASE_PASSWORD: postgres
+      DJANGO_DATABASE_HOST: db
+      DJANGO_DATABASE_PORT: "5432"
+      DJANGO_REDIS_URL: redis://redis:6379/0
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
   db:
     image: postgres:17
     restart: always
@@ -6,8 +27,6 @@ services:
       POSTGRES_DB: interview
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-    ports:
-      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -21,8 +40,6 @@ services:
     command: redis-server --appendonly yes
     volumes:
       - redis_data:/data
-    ports:
-      - "6379:6379"
     healthcheck:
       test: ["CMD","redis-cli","ping"]
       interval: 5s

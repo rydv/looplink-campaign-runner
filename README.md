@@ -6,23 +6,26 @@ The behavioral source of truth is [`../docs/problem-statement.md`](../docs/probl
 
 ## Prerequisites
 
-- Python 3.13
-- [uv](https://docs.astral.sh/uv/)
-- Node.js and npm
-- Docker Desktop (for PostgreSQL and Redis)
+- Docker Desktop with Docker Compose v2
 
 ## Setup and run
 
 ```sh
-docker compose up -d
-uv sync
-npm ci
-.venv/bin/python manage.py migrate
-npm run build
-.venv/bin/python manage.py runserver
+docker compose up --build
 ```
 
+This builds the frontend assets and Python environment inside the application
+image, starts PostgreSQL and Redis, applies migrations, and serves Django.
 Open [http://127.0.0.1:8000/campaigns/](http://127.0.0.1:8000/campaigns/).
+
+Run in the background with `docker compose up --build -d`; inspect app logs
+with `docker compose logs -f web`; stop all services with `docker compose down`.
+PostgreSQL and Redis intentionally have no host ports because the app reaches
+them through the Compose network as `db` and `redis`.
+
+If a host development server is already using port 8000, stop it before
+starting the `web` service, or change the left-hand side of `8000:8000` in
+`docker-compose.yml`.
 
 ## Use the two surfaces
 
@@ -50,11 +53,10 @@ Open the live campaign URL or scan its QR code. A shopper enters an email or pho
 ## Verification
 
 ```sh
-.venv/bin/pytest
-ruff check .
-.venv/bin/python manage.py check
-.venv/bin/python manage.py makemigrations --check --dry-run
-npm run build
+docker compose exec web pytest
+docker compose exec web ruff check looplink
+docker compose exec web python manage.py check
+docker compose exec web python manage.py makemigrations --check --dry-run
 ```
 
 ## Key implementation choices

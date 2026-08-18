@@ -107,7 +107,7 @@ def setup_dev_env(c: Context, step=False):
 
     cprint("\n\n🎉 Success! Your dev environment is now ready. Here are a few tips:", "green")
     cprint("\n1️⃣  Continuously build webpack in another shell with: `inv npm -w` or `npm run watch`", "cyan")
-    cprint("\n2️⃣  Run the development server with: `./manage.py runserver`", "cyan")
+    cprint("\n2️⃣  Run the complete application with: `docker compose up --build`", "cyan")
     cprint("\n3️⃣  Finally, visit http://localhost:8000\n", "cyan")
 
 

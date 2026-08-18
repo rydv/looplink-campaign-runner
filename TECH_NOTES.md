@@ -11,6 +11,16 @@ background scheduler, offer-redemption engine, coupon code, OTP, or independent
 link expiry. Campaign status—not the campaign window—is authoritative for public
 visibility and enrollment.
 
+## Runtime and local environment
+
+Docker Compose is the recommended and self-contained runtime. The `web` image
+uses Python 3.13, installs the locked Python dependencies with `uv`, builds the
+locked frontend dependencies with Node, then starts Django after PostgreSQL and
+Redis report healthy. Compose injects `db` and `redis` service addresses, so no
+host Python, Node, PostgreSQL, or Redis installation is needed. The exact
+command is `docker compose up --build`; `README.md` contains the operational
+commands and container-based verification steps.
+
 ## What is implemented
 
 - Internal campaign list, draft builder, typed repeatable offers, lifecycle
@@ -136,11 +146,10 @@ public visibility, invalid links, QR distribution, and enrollment counts.
 Run:
 
 ```sh
-.venv/bin/pytest
-ruff check .
-.venv/bin/python manage.py check
-.venv/bin/python manage.py makemigrations --check --dry-run
-npm run build
+docker compose exec web pytest
+docker compose exec web ruff check looplink
+docker compose exec web python manage.py check
+docker compose exec web python manage.py makemigrations --check --dry-run
 ```
 
 ## Timebox cuts and limitations

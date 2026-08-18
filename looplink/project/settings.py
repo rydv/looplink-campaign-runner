@@ -100,7 +100,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://localhost:6379/0",
+        "LOCATION": env("DJANGO_REDIS_URL", default="redis://localhost:6379/0"),
         "OPTIONS": {
             "health_check_interval": 30,
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
