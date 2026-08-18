@@ -1,192 +1,168 @@
-# Tech Notes
+# Technical Notes
 
-## Sources and scope
+## Scope and source of truth
 
-The binding source for product behavior is
-[`docs/problem-statement.md`](../docs/problem-statement.md). When behavior is
-unclear, that document takes precedence over implementation convenience. The
-secondary design reference is
-[`docs/solution-blueprint.md`](../docs/solution-blueprint.md), followed by the
-[`docs/multi-stage-implementation-plan.md`](../docs/multi-stage-implementation-plan.md).
+[`../docs/problem-statement.md`](../docs/problem-statement.md) is the binding
+source for product behavior. [`../docs/solution-blueprint.md`](../docs/solution-blueprint.md)
+records the design approach; the implementation plan is supporting context.
 
-This is a single-workspace, single-process MVP. Authentication, multi-tenancy,
-automatic scheduling, offer execution, coupon generation, identity verification,
-and independent distribution-link expiry are intentionally out of scope.
+This is a deliberately small, single-workspace MVP: no login, tenancy,
+background scheduler, offer-redemption engine, coupon code, OTP, or independent
+link expiry. Campaign status—not the campaign window—is authoritative for public
+visibility and enrollment.
 
-## Stage 0 decisions
+## What is implemented
 
-### Validation
+- Internal campaign list, draft builder, typed repeatable offers, lifecycle
+  controls, live-link distribution, and aggregate enrollment counts.
+- Public mobile-first campaign page with invalid-link and all non-live states.
+- Three parameterized offer types: product percent discount, cart fixed
+  discount, and sticker earn. Multiple offers of the same type are supported.
+- Local SVG QR generation, opaque public UUID links, and idempotent shopper
+  enrollment by email or phone.
 
-The server is authoritative for all domain rules. Browser validation may mirror
-simple constraints for immediate feedback, but lifecycle readiness, draft-only
-editing, offer parameter validation, identity normalization, and enrollment
-uniqueness will be enforced in domain services and the database.
+## Design decisions requested by the exercise
 
-### Lifecycle
+### 1. Validation
 
-Campaign lifecycle changes will use explicit service operations rather than a
-general status update. The supported transitions are `draft -> scheduled`,
-`draft -> live`, `scheduled -> live`, and `live -> ended`. We interpret `end` as
-`live -> ended` because its specified purpose is to close open enrollment; the
-exercise does not define draft/scheduled cancellation. Status alone determines
-public visibility and enrollment, so dates never transition a campaign.
+The server is authoritative. Django forms provide field feedback; domain
+services validate typed offer parameters, lifecycle readiness, and identity
+normalization; database constraints protect persisted invariants. JavaScript is
+only progressive enhancement: it shows the selected offer type’s fields and
+adds/removes offer rows, but direct POST requests receive the same server-side
+rules. This avoids client/server rule drift.
 
-### Stale writes
+A draft may be incomplete. Schedule and launch re-check persisted offers and a
+complete UTC window (`end > start` and not already ended). Offer parameters are
+validated against the fixed catalog before a draft write succeeds.
 
-Campaigns will carry an integer version. Draft saves and lifecycle actions must
-match the persisted version inside a transaction. A version mismatch or a draft
-that has become non-draft returns a conflict and never overwrites current state.
+### 2. Lifecycle and legal actions
 
-### Distribution
+`Campaign.status` is a forward-only state machine with explicit commands:
 
-Each campaign will have an opaque, stable, unique public identifier. Its QR code
-will contain only the absolute public URL. It will not expose an internal primary
-key, campaign data, offer values, shopper identity, or an independent expiry.
+```text
+draft ──schedule──> scheduled ──launch──> live ──end──> ended
+  └────────────────launch───────────────────┘
+```
 
-### Identity and duplicate enrollment
+There is no generic status-update endpoint. The transition service locks the
+campaign row, checks the action against one allowed-transition map, revalidates
+readiness for schedule/launch, and writes the next status. The UI derives which
+buttons to show from the same policy, while the server remains the final
+authority.
 
-Email is trimmed and lowercased. Phone input has spaces and punctuation removed.
-A database unique constraint on campaign plus normalized identity is the final
-duplicate guard; a conflicting insert is recovered as a recognized enrollment.
+`end` is implemented as `live -> ended`. This is the narrow interpretation of
+the exercise wording: it closes open enrollment, and the exercise does not
+define cancelling a draft or scheduled campaign. A live campaign stays live
+after its `ends_at` timestamp until explicitly ended.
 
-### Two audiences
+### 3. Stale state and concurrent writes
 
-Internal and shopper pages use separate presenters/templates over the same
-domain model. Public presentation is status-gated and never includes offers for
-draft, scheduled, or ended campaigns.
+Campaigns carry an integer `version`. Draft saves and lifecycle actions submit
+that version, then compare it with the locked current row inside a transaction.
+A mismatch—or a draft that became non-editable—returns a conflict without
+overwriting current state. This protects the case where one operator launches a
+campaign while another still has its draft form open.
 
-### UI direction
+### 4. Distribution link and QR code
 
-No trustworthy color specification is present in the starter. Before the visual
-stage, official LoopLink brand assets will be used if a reliable source is
-available. Otherwise the product will use a restrained modern commerce-platform
-theme: neutral surfaces, strong typographic hierarchy, one primary accent,
-semantic status colors, compact responsive grids, and accessible contrast. All
-colors will be centralized as design tokens so verified brand values can replace
-the fallback without rewriting templates.
+Every campaign has a stable, opaque UUID (`public_id`) separate from its
+internal database ID. The shared link is `/campaigns/c/<public_id>/`; it exposes
+no campaign name, offer value, identity, internal key, or independent expiry.
+The QR code is generated locally as inline SVG via `qrcode`, so the demo does
+not call or leak URLs to a third-party QR service.
 
-The starter's Outfit typeface, Django templates, HTMX actions, Alpine for local
-interactions, and Tailwind styling will be retained.
+Links remain resolvable after state changes. The public route returns a
+status-specific draft, scheduled, or ended page without offers; malformed and
+unknown IDs return a deliberate invalid-link response.
 
-### Provisional UI tokens
+### 5. Identity without authentication
 
-The first implementation uses a deep ink navigation surface (`#101323`), an
-indigo primary (`#5d4ce6`), a teal operational accent (`#14b8a6`), and neutral
-white/slate content surfaces. These are intentionally modern commerce-platform
-defaults rather than claimed LoopLink brand values. They live in
-`styles/looplink.css` as `--ll-*` tokens, together with shared radii, borders,
-and shadows, so an official palette can replace them in one place.
+The shopper submits one unverified email address or phone number, as required.
+Emails are trimmed and lowercased. Phone numbers have spaces and punctuation
+removed, then require 7–15 digits; this is pragmatic normalization, not full
+E.164 validation.
 
-## Environment baseline
+`Enrollment` stores both the submitted and normalized values. A database unique
+constraint on `(campaign, normalized_identity)` is the final duplicate guard.
+If an insert races or repeats, the existing enrollment is returned as
+“recognized,” not an error or second membership. Enrollment also re-checks that
+the campaign is still live inside its transaction.
 
-- The repository began from commit `062fc69` (`template code`).
-- Python 3.13 is the supported project runtime. A host Python 3.14 installation
-  is not treated as the project environment.
-- PostgreSQL and Redis remain the starter's local Docker-backed services.
-- The Stage 0 baseline passes Django system checks, migrations, Ruff, Pytest,
-  and the Webpack production build. The starter contained no tests, so a small
-  campaign-app registration smoke test was added.
-- `npm ci` reports vulnerabilities in the locked starter dependency tree. No
-  automatic audit fix was applied because it could introduce unrelated or
-  breaking dependency changes; this will be reassessed before submission.
+### 6. One model, two audiences
 
-## Stage 2 domain foundation
+Internal and public representations are separated through distinct presenters,
+views, and templates. Internal pages include operational state, lifecycle
+controls, share tools, and aggregate enrollment count. Public pages contain only
+the campaign identity and formatted offers, and only for a live campaign after
+successful/recognized enrollment. Non-live public states intentionally disclose
+no offers or internal operational fields.
 
-`Campaign` keeps its internal database identifier separate from an opaque UUID
-`public_id`, and includes status, UTC window fields, version, and timestamps.
-Drafts may have an incomplete window while they are being built; readiness is
-checked only at schedule/launch time. `Offer` is an ordered list—not a map by
-type—with JSON parameters validated by the fixed offer catalog. `Enrollment`
-stores both original and normalized identity, with a database unique constraint
-on `(campaign, normalized_identity)`.
+## Interface and accessibility choices
 
-The model layer provides persistence constraints; pure services own offer
-parameter validation, lifecycle/readiness rules, identity normalization, and
-safe offer formatting. Internal and public presenters are intentionally
-separate. The public presenter exposes offers only for `live` campaigns.
+The internal surface uses centralized `--ll-*` tokens: deep ink navigation,
+indigo primary action, teal launch action, neutral surfaces, semantic status
+color, compact grids, and responsive cards. These are a documented modern
+fallback, not claimed official LoopLink brand colors; replacing tokens is
+centralized if verified assets become available.
 
-## Exercise flows
+The builder reveals only the selected offer type’s two parameters. The terminal
+end action uses a native confirmation dialog. Forms prevent repeat submission,
+validation responses focus the first invalid field, and the distribution URL is
+always visible in addition to copy-link support. Public pages are designed for a
+narrow mobile viewport.
 
-Start the stack with `docker compose up -d`, `uv sync`, `npm ci`, migrations,
-and `npm run build`; exact commands are in `README.md`. Create a draft at
-`/campaigns/new/`. To demonstrate a blocked action, try launch before adding
-both a valid UTC window and an offer. To demonstrate a non-live scan, open the
-opaque UUID route for a draft, scheduled, or ended campaign; it resolves but
-does not disclose offers. The README walkthrough covers launch, distribution,
-first/repeat enrollment, ending, and an unknown link.
+## How to exercise the key flows
 
-## Timebox cuts and known limitations
+Use the exact setup commands in `README.md`, then open `/campaigns/`.
 
-- No authentication, tenancy, scheduler, automatic end, offer execution,
-  coupon generation, OTP, or ownership verification—each is outside scope.
-- No pagination, filters, analytics, enrollment counts, or activity feed.
-- Currency is intentionally plain numeric input, as specified.
-- The copy action uses the browser clipboard API; the URL remains visible for
-  manual copy when it is unavailable.
+1. Create a draft with a name but no offer/window and choose **Launch** to see
+   server-rendered readiness feedback.
+2. Add a valid UTC window and one or more offers; schedule it, open it, and use
+   **Launch campaign**. Launching directly from draft is also supported.
+3. From the live view, open/copy the UUID link or scan its local QR code.
+4. Enroll using `person@example.com`, then repeat with
+   ` PERSON@EXAMPLE.COM `; the second visit is recognized and the internal
+   aggregate remains one.
+5. End the campaign and reload the same link: it shows ended with no offers.
+6. Open `/campaigns/c/not-a-public-id/` for the invalid-link state. Open a
+   known draft or scheduled UUID link for the non-live scan state.
+
+## Verification
+
+The test suite covers model constraints, offer validation, legal/illegal
+lifecycle changes, stale writes, identity normalization, duplicate enrollment,
+public visibility, invalid links, QR distribution, and enrollment counts.
+Run:
+
+```sh
+.venv/bin/pytest
+ruff check .
+.venv/bin/python manage.py check
+.venv/bin/python manage.py makemigrations --check --dry-run
+npm run build
+```
+
+## Timebox cuts and limitations
+
+- No authentication, team/workspace isolation, audit trail, pagination,
+  filtering, analytics, or activity feed.
+- No automatic scheduling/ending; dates are validated metadata by specification.
+- Monetary parameters are plain numbers in one implied currency; no FX or
+  minor-unit handling.
+- No offer redemption, coupon generation, SKU lookup, or identity ownership
+  verification.
+- Clipboard copying depends on the browser API, with a read-only URL fallback.
 
 ## AI use
 
-AI assistance was used for planning, code drafting, test creation, and review.
-The resulting code, trade-offs, and tests were inspected and can be explained
-or changed directly.
+AI assistance was used for planning, code drafting, test creation, UI review,
+and iterative debugging. The resulting implementation, trade-offs, and tests
+were inspected and can be explained or changed directly.
 
 ## What I would do next
 
-Introduce authentication/workspaces before additional team-facing controls. A production system
-would also add audit events, background scheduling, security headers, stronger
-identity verification when required, and browser accessibility regression tests.
-
-## Optional enrollment count
-
-The single selected stretch goal is an internal enrollment count. It is computed
-with a database annotation on the campaign list and detail query, shows only an
-aggregate, and is therefore current on the next internal read after a first or
-recognized repeat enrollment without exposing shopper identities.
-
-## Stage 3 internal draft builder
-
-The draft builder is intentionally a server-rendered Django form and inline
-formset first, with Alpine only adding repeatable offer rows in the browser.
-This keeps direct HTTP submissions, validation errors, and persistence behavior
-independent of JavaScript. The write service locks the campaign row, permits
-changes only while it is a draft, checks the submitted integer version, and
-replaces the ordered offer aggregate atomically. A non-draft edit URL renders a
-read-only locked response rather than trusting the client to hide edit controls.
-
-## Stage 4 lifecycle actions
-
-Lifecycle changes go through a separate `transition_campaign` command instead
-of the draft write path. It acquires the campaign row lock, verifies the
-submitted version and allowed action against current state, re-validates
-readiness for schedule/launch, then increments the version with the new status
-in the same transaction. The route accepts only POST and the UI only renders
-actions returned by the lifecycle policy; those UI controls are guidance, not
-the security boundary.
-
-## Stage 5 shopper access and enrollment
-
-Public campaigns are addressed by the opaque UUID alone and are presented by a
-separate, deliberately small data shape. Non-live pages disclose neither offers
-nor operational details. Enrollment locks and re-checks campaign status at POST
-time, then relies on the database uniqueness constraint for cross-request
-idempotency. The attempted insert is isolated in a nested transaction so a
-duplicate can be recovered as a recognized enrollment without poisoning the
-outer transaction.
-
-## Stage 6 distribution
-
-The distribution URL is built from the inbound request and contains only the
-campaign's opaque UUID. QR rendering uses the local `qrcode` Python package and
-an inline SVG image; it makes no request to a hosted QR service and persists no
-derived image. The live-only internal view is the sole place distribution data
-is prepared or rendered.
-
-## Stage 7 interaction and accessibility polish
-
-The terminal end transition requires an explicit native dialog confirmation,
-which retains browser keyboard and focus behavior without a custom modal
-dependency. Shared frontend behavior prevents repeated submit clicks, returns
-focus to an invalid control after a server-rendered validation response, and
-keeps the copy-link and distribution controls usable in narrow layouts. These
-are interface safeguards only; lifecycle and validation checks remain enforced
-on the server.
+Before expanding internal controls, add authentication and workspace ownership.
+For production readiness, add audit events, scheduling infrastructure,
+observability, security headers/CSP, browser-level accessibility regression
+tests, and stronger identity verification only if the product requires it.
