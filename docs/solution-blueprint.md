@@ -191,28 +191,28 @@ This sequence applies to both schedule and launch; only their allowed source sta
 
 ```mermaid
 sequenceDiagram
-    participant O as Operator
-    participant B as Builder page
-    participant V as View / HTMX action
-    participant S as Campaign service
-    participant DB as Database
+    participant Operator
+    participant Builder
+    participant View
+    participant Service
+    participant Database
 
-    O->>B: Choose Schedule or Launch
-    B->>V: POST action with campaign id and version
-    V->>S: transition(campaign_id, action, expected_version)
-    S->>DB: Load campaign in transaction
-    DB-->>S: Current status, version, offers, window
-    S->>S: Check version, legal source state, readiness
-    alt rejected
-        S-->>V: Conflict or validation error
-        V-->>B: 409/422 with current state and feedback
-        B-->>O: Keep page; show why action is blocked
-    else accepted
-        S->>DB: Persist next status and increment version
-        DB-->>S: Updated campaign
-        S-->>V: Updated campaign + allowed actions
-        V-->>B: Refresh detail/distribution fragment
-        B-->>O: Show new status
+    Operator->>Builder: Select schedule or launch
+    Builder->>View: Submit action with version
+    View->>Service: Apply transition
+    Service->>Database: Lock and load campaign
+    Database-->>Service: Current campaign state
+    Service->>Service: Check version, state, and readiness
+    alt Request rejected
+        Service-->>View: Return validation or conflict error
+        View-->>Builder: Render current state with feedback
+        Builder-->>Operator: Explain why action is blocked
+    else Request accepted
+        Service->>Database: Save next status and version
+        Database-->>Service: Updated campaign
+        Service-->>View: Return updated campaign
+        View-->>Builder: Redirect to campaign view
+        Builder-->>Operator: Show updated status and actions
     end
 ```
 
@@ -294,21 +294,21 @@ sequenceDiagram
 
 ```mermaid
 sequenceDiagram
-    participant A as Operator A
-    participant B as Operator B
-    participant V as View / service
-    participant DB as Database
+    participant OperatorA
+    participant OperatorB
+    participant View
+    participant Database
 
-    A->>V: GET draft (version 4)
-    V-->>A: Editable form with version 4
-    B->>V: Launch campaign
-    V->>DB: Change draft to live, version 5
-    DB-->>V: Campaign is live
-    A->>V: POST save with version 4
-    V->>DB: Load current campaign
-    DB-->>V: live, version 5
-    V-->>A: 409 conflict; no overwrite
-    Note over A,V: Reload displays read-only live campaign
+    OperatorA->>View: Open draft at version 4
+    View-->>OperatorA: Return editable draft form
+    OperatorB->>View: Launch campaign
+    View->>Database: Save live status at version 5
+    Database-->>View: Return live campaign
+    OperatorA->>View: Save draft at version 4
+    View->>Database: Lock and load campaign
+    Database-->>View: Return live campaign at version 5
+    View-->>OperatorA: Return conflict without overwrite
+    Note over OperatorA,View: Reload shows the read-only live campaign
 ```
 
 ## 6. Domain model and invariants

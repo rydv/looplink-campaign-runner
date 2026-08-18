@@ -273,26 +273,30 @@ Complete the operator’s campaign list, create, edit, and validation workflow w
 
 ```mermaid
 sequenceDiagram
-    participant O as Operator
-    participant UI as Builder UI
-    participant V as Django view/form
-    participant S as Campaign write service
-    participant DB as Database
+    participant Operator
+    participant Builder
+    participant View
+    participant Service
+    participant Database
 
-    O->>UI: Enter campaign and offer fields
-    UI->>V: Submit draft with version
-    V->>V: Parse fields and typed offer rows
-    alt input invalid
-        V-->>UI: Field and offer errors with entered values
-    else input valid
-        V->>S: save_draft(command)
-        S->>DB: Check draft status/version and persist aggregate
-        alt stale or locked
-            S-->>V: Conflict with current campaign state
-            V-->>UI: Reload guidance; no overwrite
-        else saved
-            S-->>V: Updated campaign/version
-            V-->>UI: Updated detail and success feedback
+    Operator->>Builder: Enter campaign and offer fields
+    Builder->>View: Submit draft with version
+    View->>View: Validate campaign and offers
+    alt Input invalid
+        View-->>Builder: Render field errors and entered values
+        Builder-->>Operator: Show validation feedback
+    else Input valid
+        View->>Service: Save draft
+        Service->>Database: Lock campaign and save aggregate
+        alt Stale or locked
+            Service-->>View: Return conflict error
+            View-->>Builder: Render reload guidance
+            Builder-->>Operator: Preserve current campaign state
+        else Saved
+            Database-->>Service: Updated campaign and version
+            Service-->>View: Return saved campaign
+            View-->>Builder: Redirect to campaign view
+            Builder-->>Operator: Show save confirmation
         end
     end
 ```
