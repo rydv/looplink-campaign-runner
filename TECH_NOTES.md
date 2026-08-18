@@ -2,8 +2,8 @@
 
 ## Scope and source of truth
 
-[`../docs/problem-statement.md`](../docs/problem-statement.md) is the binding
-source for product behavior. [`../docs/solution-blueprint.md`](../docs/solution-blueprint.md)
+[`./docs/problem-statement.md`](./docs/problem-statement.md) is the binding
+source for product behavior. [`./docs/solution-blueprint.md`](./docs/solution-blueprint.md)
 records the design approach; the implementation plan is supporting context.
 
 This is a deliberately small, single-workspace MVP: no login, tenancy,
